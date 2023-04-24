@@ -23,7 +23,7 @@ int main()
 	Object *obj = new Object(shapes);
 	my_scene.addObject(obj);
 
-	//obj->translate(vec3(400, 200, 1));
+	obj->translate(vec3(400, 200, 1));
 
 	float start_angle = 55.0f;
 	float start_delta = 0.05;
@@ -32,17 +32,14 @@ int main()
 	float angle = -start_angle;
 	float delta = start_delta;
 	int dir = 1;
-	//obj->rotate(angle);
-
-	float angle_ = 90.0f;
-	float r = 50.0f;
+	obj->rotate(angle);
 
 	while (my_scene.isOpen())
 	{
 		bool isHit = false;
 		my_scene.pollEvents(isHit);
 
-		/*if (isHit)
+		if (isHit)
 		{
 			delta = start_delta;
 			max_angle = start_angle;
@@ -63,20 +60,9 @@ int main()
 				if(max_angle > 0)
 					delta = start_delta * (max_angle / start_angle);
 			}
-		}*/
-
-		float x = cosf(angle * 3.14 / 180.0f) * r;
-		float y = sinf(angle * 3.14 / 180.0f) * r;
-
-		obj->translate(vec3(x, y, 1));
-		obj->translate(vec3(400, 200, 1));
+		}
 
 		my_scene.render();
-
-		angle -= 0.05f;
-
-		obj->translate(vec3(-400, -200, 1));
-		obj->translate(vec3(-x, -y, 1));
 	}
 
 
