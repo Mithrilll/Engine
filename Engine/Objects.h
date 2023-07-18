@@ -53,6 +53,13 @@ private:
 class Camera : public Object
 {
 public:
+	enum class RenderMode
+	{
+		Wireframe = 0,
+		Solid
+	};
+
+
 	Camera();
 	~Camera() override;
 
@@ -66,8 +73,12 @@ public:
 	void rotateX(float angle) override;
 	void rotateY(float angle) override;
 	void rotateZ(float angle) override;
+	void setRotation(vec3 angles);
 	void translate(vec3 translation) override;
 	void scaling(float coeff) override;
+
+	RenderMode getRenderMode() const;
+	void setRenderMode(RenderMode mode);
 
 	mat4 getView() const;
 	mat4 getProjection() const;
@@ -75,4 +86,6 @@ public:
 private:
 	mat4 view;
 	mat4 projection;
+
+	RenderMode render_mode;
 };

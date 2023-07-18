@@ -17,8 +17,6 @@ public:
 
 	void render(const Camera& camera);
 
-	void renderGizmo(const Camera& camera);
-
 	void addMesh(ObjectMesh *obj);
 
 private:

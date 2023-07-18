@@ -90,10 +90,10 @@ void ObjectMesh::rotateY(float angle)
 {
 	mat4 addition;
 	float radians = angle * 3.14f / 180.0f;
-	addition.mat[0][1] = cosf(radians);
-	addition.mat[0][3] = sinf(radians);
+	addition.mat[0][0] = cosf(radians);
+	addition.mat[0][2] = sinf(radians);
 	addition.mat[2][0] = -sinf(radians);
-	addition.mat[2][3] = cosf(radians);
+	addition.mat[2][2] = cosf(radians);
 
 	rotation *= addition;
 }
@@ -178,31 +178,65 @@ void ObjectMesh::render(sf::RenderWindow& window, const Camera& camera)
 	}
 
 	// shapes depth sort
-	std::sort(triangles.begin(), triangles.end(), [](std::pair<std::vector<vec3>, float> a, std::pair<std::vector<vec3>, float> b) { return a.second > b.second; });
+	std::sort(triangles.begin(), triangles.end(), [](std::pair<std::vector<vec3>, float> a, std::pair<std::vector<vec3>, float> b) { return a.second < b.second; });
 
 	for (int i = 0; i < triangles.size(); i++)
 	{
-		sf::Vertex line1[] =
-		{
-			sf::Vertex(sf::Vector2f(triangles[i].first[0].x, triangles[i].first[0].y), sf::Color::Green),
-			sf::Vertex(sf::Vector2f(triangles[i].first[1].x, triangles[i].first[1].y), sf::Color::Blue)
-		};
+		if (triangles[i].second > 1)
+			continue;
 
-		sf::Vertex line2[] =
-		{
-			sf::Vertex(sf::Vector2f(triangles[i].first[1].x, triangles[i].first[1].y), sf::Color::Blue),
-			sf::Vertex(sf::Vector2f(triangles[i].first[2].x, triangles[i].first[2].y), sf::Color::Red)
-		};
+		float ax = triangles[i].first[1].x - triangles[i].first[0].x;
+		float ay = triangles[i].first[1].y - triangles[i].first[0].y;
 
-		sf::Vertex line3[] =
-		{
-			sf::Vertex(sf::Vector2f(triangles[i].first[2].x, triangles[i].first[2].y), sf::Color::Red),
-			sf::Vertex(sf::Vector2f(triangles[i].first[0].x, triangles[i].first[0].y), sf::Color::Green)
-		};
+		float bx = triangles[i].first[2].x - triangles[i].first[0].x;
+		float by = triangles[i].first[2].y - triangles[i].first[0].y;
 
-		window.draw(line1, 2, sf::Lines);
-		window.draw(line2, 2, sf::Lines);
-		window.draw(line3, 2, sf::Lines);
+		float dir = ax * by - ay * bx;
+		if (dir > 0)
+			continue;
+
+		switch (camera.getRenderMode())
+		{
+		case Camera::RenderMode::Wireframe:
+			{
+				sf::Vertex line1[] =
+				{
+					sf::Vertex(sf::Vector2f(triangles[i].first[0].x, triangles[i].first[0].y), sf::Color::Green),
+					sf::Vertex(sf::Vector2f(triangles[i].first[1].x, triangles[i].first[1].y), sf::Color::Blue)
+				};
+
+				sf::Vertex line2[] =
+				{
+					sf::Vertex(sf::Vector2f(triangles[i].first[1].x, triangles[i].first[1].y), sf::Color::Blue),
+					sf::Vertex(sf::Vector2f(triangles[i].first[2].x, triangles[i].first[2].y), sf::Color::Red)
+				};
+
+				sf::Vertex line3[] =
+				{
+					sf::Vertex(sf::Vector2f(triangles[i].first[2].x, triangles[i].first[2].y), sf::Color::Red),
+					sf::Vertex(sf::Vector2f(triangles[i].first[0].x, triangles[i].first[0].y), sf::Color::Green)
+				};
+
+				window.draw(line1, 2, sf::Lines);
+				window.draw(line2, 2, sf::Lines);
+				window.draw(line3, 2, sf::Lines);
+			}
+			break;
+		case Camera::RenderMode::Solid:
+			{
+				sf::ConvexShape triangle(3);
+				triangle.setPoint(0, sf::Vector2f(triangles[i].first[0].x, triangles[i].first[0].y));
+				triangle.setPoint(1, sf::Vector2f(triangles[i].first[1].x, triangles[i].first[1].y));
+				triangle.setPoint(2, sf::Vector2f(triangles[i].first[2].x, triangles[i].first[2].y));
+
+				triangle.setFillColor(sf::Color::Green);
+				triangle.setOutlineColor(sf::Color::White);
+				triangle.setOutlineThickness(1);
+
+				window.draw(triangle);
+			}
+			break;
+		}
 	}
 }
 
@@ -211,6 +245,8 @@ Camera::Camera() : Object()
 	view = mat4();
 	projection = mat4::getPerspective(1.0f, 60.0f, 0.1f, 100.0f);
 	//projection = mat4::getOrtographic(1.0f, 8.0f, 8.0f, 0.1f, 1000.0f);
+
+	render_mode = RenderMode::Solid;
 }
 
 Camera::~Camera()
@@ -224,6 +260,7 @@ Camera::Camera(const Camera& other)
 	scale = other.scale;
 	view = other.view;
 	projection = other.projection;
+	render_mode = other.render_mode;
 }
 
 void Camera::operator=(const Camera& other)
@@ -236,6 +273,7 @@ void Camera::operator=(const Camera& other)
 	scale = other.scale;
 	view = other.view;
 	projection = other.projection;
+	render_mode = other.render_mode;
 }
 
 Camera::Camera(Camera&& other) noexcept
@@ -245,6 +283,7 @@ Camera::Camera(Camera&& other) noexcept
 	scale = std::move(other.scale);
 	view = std::move(other.view);
 	projection = std::move(other.projection);
+	render_mode = other.render_mode;
 }
 
 void Camera::operator=(Camera&& other) noexcept
@@ -257,6 +296,7 @@ void Camera::operator=(Camera&& other) noexcept
 	scale = std::move(other.scale);
 	view = std::move(other.view);
 	projection = std::move(other.projection);
+	render_mode = other.render_mode;
 }
 
 void Camera::rotateX(float angle)
@@ -277,10 +317,10 @@ void Camera::rotateY(float angle)
 {
 	mat4 addition;
 	float radians = angle * 3.14f / 180.0f;
-	addition.mat[0][1] = cosf(radians);
-	addition.mat[0][3] = sinf(radians);
+	addition.mat[0][0] = cosf(radians);
+	addition.mat[0][2] = sinf(radians);
 	addition.mat[2][0] = -sinf(radians);
-	addition.mat[2][3] = cosf(radians);
+	addition.mat[2][2] = cosf(radians);
 
 	rotation *= addition;
 
@@ -297,6 +337,34 @@ void Camera::rotateZ(float angle)
 	addition.mat[1][1] = cosf(radians);
 
 	rotation *= addition;
+
+	view = mat4::getInverse(scale * translation * rotation);
+}
+
+void Camera::setRotation(vec3 angles)
+{
+	mat4 rotX;
+	float radians = angles.x * 3.14f / 180.0f;
+	rotX.mat[1][1] = cosf(radians);
+	rotX.mat[1][2] = sinf(radians);
+	rotX.mat[2][1] = -sinf(radians);
+	rotX.mat[2][2] = cosf(radians);
+
+	mat4 rotY;
+	radians = angles.y * 3.14f / 180.0f;
+	rotY.mat[0][0] = cosf(radians);
+	rotY.mat[0][2] = sinf(radians);
+	rotY.mat[2][0] = -sinf(radians);
+	rotY.mat[2][2] = cosf(radians);
+
+	mat4 rotZ;
+	radians = angles.z * 3.14f / 180.0f;
+	rotZ.mat[0][0] = cosf(radians);
+	rotZ.mat[0][1] = sinf(radians);
+	rotZ.mat[1][0] = -sinf(radians);
+	rotZ.mat[1][1] = cosf(radians);
+
+	rotation = rotZ * rotY * rotX;
 
 	view = mat4::getInverse(scale * translation * rotation);
 }
@@ -323,6 +391,16 @@ void Camera::scaling(float coeff)
 	scale *= addition;
 
 	view = mat4::getInverse(scale * translation * rotation);
+}
+
+Camera::RenderMode Camera::getRenderMode() const
+{
+	return render_mode;
+}
+
+void Camera::setRenderMode(Camera::RenderMode mode)
+{
+	render_mode = mode;
 }
 
 mat4 Camera::getView() const

@@ -4,11 +4,12 @@
 
 int main()
 {
+	// system init
 	Scene my_scene;
 	Camera my_camera;
 	Input my_input;
 
-	// init
+	// client init
 	vec3 point0( 5.0f,  5.0,  5.0f);
 	vec3 point1( 5.0f,  5.0, -5.0f);
 	vec3 point2(-5.0f,  5.0, -5.0f);
@@ -24,27 +25,45 @@ int main()
 																							{4, 7, 6}, {0, 3, 4}, {4, 3, 7} });
 	my_scene.addMesh(&pyramid);
 
+	my_scene.pollEvents(my_input);
+
 	my_camera.translate(vec3(0.0f, 0.0f, -30.0f));
 
-	//my_camera.rotateX(-45.0f);
+	float phi = 0.0f;
+	float theta = 0.0f;
 
-	float angle = 0.01f;
-
+	// start of main loop
 	while (my_scene.isOpen())
 	{
-		// update
+		// system update
 		my_scene.pollEvents(my_input);
 
-		if(my_input.isKeyPressed(sf::Keyboard::W))
-			my_camera.rotateX(angle);
+		// client update
+		if (my_input.isKeyPressed(sf::Keyboard::W))
+			my_camera.translate(vec3(0.0f, 0.0f, 0.1f));
 
 		if (my_input.isKeyPressed(sf::Keyboard::S))
-			my_camera.rotateX(-angle);
+			my_camera.translate(vec3(0.0f, 0.0f, -0.1f));
 
-		// render
+		if (my_input.isKeyPressed(sf::Keyboard::A))
+			my_camera.translate(vec3(0.1f, 0.0f, 0.0f));
+
+		if (my_input.isKeyPressed(sf::Keyboard::D))
+			my_camera.translate(vec3(-0.1f, 0.0f, 0.0f));
+
+		if (my_input.isKeyPressed(sf::Keyboard::Q))
+			my_camera.translate(vec3(0.0f, 0.1f, 0.0f));
+
+		if (my_input.isKeyPressed(sf::Keyboard::E))
+			my_camera.translate(vec3(0.0f, -0.1f, 0.0f));
+
+		phi += -my_input.getMouseDeltaX() * 0.1f;
+		theta += my_input.getMouseDeltaY() * 0.1f;
+
+		my_camera.setRotation(vec3(theta, phi, 0.0f));
+
+		// system render
 		my_scene.render(my_camera);
-
-		//my_scene.renderGizmo(my_camera);
 	}
 
 	return 0;

@@ -17,3 +17,13 @@ bool Input::isKeyPressed(sf::Keyboard::Key key)
 {
 	return pressed_keys[key];
 }
+
+int Input::getMouseDeltaX()
+{
+	return mouse_delta_x;
+}
+
+int Input::getMouseDeltaY()
+{
+	return mouse_delta_y;
+}
