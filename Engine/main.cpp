@@ -1,70 +1,51 @@
-#include <conio.h>
+#include <iostream>
 
 #include "Scene.h"
 
 int main()
 {
 	Scene my_scene;
+	Camera my_camera;
+	Input my_input;
 
-	std::vector<std::vector<vec3>> shapes;
-	std::vector<vec3> points;
-	points.push_back(vec3(-5, 0, 1));
-	points.push_back(vec3(-5, 200, 1));
-	points.push_back(vec3(5, 200, 1));
-	points.push_back(vec3(5, 0, 1));
-	shapes.push_back(points);
-	points.clear();
-	points.push_back(vec3(0, 175, 1));
-	points.push_back(vec3(-25, 200, 1));
-	points.push_back(vec3(0, 225, 1));
-	points.push_back(vec3(25, 200, 1));
-	shapes.push_back(points);
+	// init
+	vec3 point0( 5.0f,  5.0,  5.0f);
+	vec3 point1( 5.0f,  5.0, -5.0f);
+	vec3 point2(-5.0f,  5.0, -5.0f);
+	vec3 point3(-5.0f,  5.0,  5.0f);
+	vec3 point4( 5.0f, -5.0,  5.0f);
+	vec3 point5( 5.0f, -5.0, -5.0f);
+	vec3 point6(-5.0f, -5.0, -5.0f);
+	vec3 point7(-5.0f, -5.0,  5.0f);
 
-	Object *obj = new Object(shapes);
-	my_scene.addObject(obj);
+	ObjectMesh pyramid({ point0, point1, point2, point3, point4, point5, point6, point7 }, { {0, 1, 2}, {0, 2, 3}, {0, 5, 1}, 
+																							{0, 4, 1}, {2, 5, 1}, {2, 6, 5}, 
+																							{6, 3, 2}, {6, 3, 7}, {4, 6, 5}, 
+																							{4, 7, 6}, {0, 3, 4}, {4, 3, 7} });
+	my_scene.addMesh(&pyramid);
 
-	obj->translate(vec3(400, 200, 1));
+	my_camera.translate(vec3(0.0f, 0.0f, -30.0f));
 
-	float start_angle = 55.0f;
-	float start_delta = 0.05;
-	float damping = 5.0f;
-	float max_angle = start_angle;
-	float angle = -start_angle;
-	float delta = start_delta;
-	int dir = 1;
-	obj->rotate(angle);
+	//my_camera.rotateX(-45.0f);
+
+	float angle = 0.01f;
 
 	while (my_scene.isOpen())
 	{
-		bool isHit = false;
-		my_scene.pollEvents(isHit);
+		// update
+		my_scene.pollEvents(my_input);
 
-		if (isHit)
-		{
-			delta = start_delta;
-			max_angle = start_angle;
-			obj->rotate(-angle);
-			angle = -start_angle;
-			obj->rotate(angle);
-			dir = 1;
-		}
+		if(my_input.isKeyPressed(sf::Keyboard::W))
+			my_camera.rotateX(angle);
 
-		if (max_angle >= 0)
-		{
-			obj->rotate(delta * dir);
-			angle += delta * dir;
-			if ((angle >= max_angle && dir > 0) || (angle <= -max_angle && dir < 0))
-			{
-				dir *= -1;
-				max_angle -= damping;
-				if(max_angle > 0)
-					delta = start_delta * (max_angle / start_angle);
-			}
-		}
+		if (my_input.isKeyPressed(sf::Keyboard::S))
+			my_camera.rotateX(-angle);
 
-		my_scene.render();
+		// render
+		my_scene.render(my_camera);
+
+		//my_scene.renderGizmo(my_camera);
 	}
-
 
 	return 0;
 }

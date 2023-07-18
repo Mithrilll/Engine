@@ -130,14 +130,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MathLib.cpp" />
-    <ClCompile Include="Object.cpp" />
+    <ClCompile Include="Objects.cpp" />
     <ClCompile Include="Scene.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Input.h" />
     <ClInclude Include="MathLib.h" />
-    <ClInclude Include="Object.h" />
+    <ClInclude Include="Objects.h" />
     <ClInclude Include="Scene.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

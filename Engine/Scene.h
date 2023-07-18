@@ -2,7 +2,8 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 
-#include "Object.h"
+#include "Objects.h"
+#include "Input.h"
 
 class Scene
 {
@@ -12,14 +13,16 @@ public:
 
 	bool isOpen();
 
-	void pollEvents(bool& restart);
+	void pollEvents(Input& input);
 
-	void render();
+	void render(const Camera& camera);
 
-	void addObject(Object *obj);
+	void renderGizmo(const Camera& camera);
+
+	void addMesh(ObjectMesh *obj);
 
 private:
-	std::vector<Object*> objects;
+	std::vector<ObjectMesh*> objects;
 
 	sf::RenderWindow *window;
 };

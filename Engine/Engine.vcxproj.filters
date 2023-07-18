@@ -18,7 +18,7 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Object.cpp">
+    <ClCompile Include="Objects.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MathLib.cpp">
@@ -27,15 +27,21 @@
     <ClCompile Include="Scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Input.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Object.h">
+    <ClInclude Include="Objects.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MathLib.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Scene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Input.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
