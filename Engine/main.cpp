@@ -10,19 +10,14 @@ int main()
 	Input my_input;
 
 	// client init
-	vec3 point0( 5.0f,  5.0,  5.0f);
-	vec3 point1( 5.0f,  5.0, -5.0f);
-	vec3 point2(-5.0f,  5.0, -5.0f);
-	vec3 point3(-5.0f,  5.0,  5.0f);
-	vec3 point4( 5.0f, -5.0,  5.0f);
-	vec3 point5( 5.0f, -5.0, -5.0f);
-	vec3 point6(-5.0f, -5.0, -5.0f);
-	vec3 point7(-5.0f, -5.0,  5.0f);
+	vec3 point0(0.0f, -10.0, 0.0f);
+	vec3 point1(-5.0f, 0.0, 5.0f);
+	vec3 point2(5.0f, 0.0, 5.0f);
+	vec3 point3(5.0f, 0.0, -5.0f);
+	vec3 point4(-5.0f, 0.0, -5.0f);
 
-	ObjectMesh pyramid({ point0, point1, point2, point3, point4, point5, point6, point7 }, { {0, 1, 2}, {0, 2, 3}, {0, 5, 1}, 
-																							{0, 4, 1}, {2, 5, 1}, {2, 6, 5}, 
-																							{6, 3, 2}, {6, 3, 7}, {4, 6, 5}, 
-																							{4, 7, 6}, {0, 3, 4}, {4, 3, 7} });
+	ObjectMesh pyramid({ point0, point1, point2, point3, point4 }, { {0, 1, 2}, {0, 2, 3}, {0, 3, 4},
+																	{0, 4, 1}, {3, 2, 4}, {2, 1, 4} });
 	my_scene.addMesh(&pyramid);
 
 	my_scene.pollEvents(my_input);
@@ -57,8 +52,11 @@ int main()
 		if (my_input.isKeyPressed(sf::Keyboard::E))
 			my_camera.translate(vec3(0.0f, -0.1f, 0.0f));
 
-		phi += -my_input.getMouseDeltaX() * 0.1f;
-		theta += my_input.getMouseDeltaY() * 0.1f;
+		if (my_input.isKeyPressed(sf::Keyboard::LShift))
+		{
+			phi += -my_input.getMouseDeltaX() * 0.1f;
+			theta += my_input.getMouseDeltaY() * 0.1f;
+		}
 
 		my_camera.setRotation(vec3(theta, phi, 0.0f));
 

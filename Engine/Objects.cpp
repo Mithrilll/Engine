@@ -231,7 +231,7 @@ void ObjectMesh::render(sf::RenderWindow& window, const Camera& camera)
 
 				triangle.setFillColor(sf::Color::Green);
 				triangle.setOutlineColor(sf::Color::White);
-				triangle.setOutlineThickness(1);
+				triangle.setOutlineThickness(0.3f);
 
 				window.draw(triangle);
 			}
