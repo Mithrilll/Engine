@@ -17,10 +17,10 @@ public:
 
 	void render(const Camera& camera);
 
-	void addMesh(ObjectMesh *obj);
+	void addObject(Object *obj);
 
 private:
-	std::vector<ObjectMesh*> objects;
+	std::vector<Object*> objects;
 
 	sf::RenderWindow *window;
 };

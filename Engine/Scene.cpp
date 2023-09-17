@@ -58,7 +58,7 @@ void Scene::render(const Camera& camera)
 	window->display();
 }
 
-void Scene::addMesh(ObjectMesh*obj)
+void Scene::addObject(Object* obj)
 {
 	objects.push_back(obj);
 }

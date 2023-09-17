@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <iostream>
 
 #include "Objects.h"
 
@@ -7,9 +8,123 @@ Object::Object()
 	translation = mat4();
 	rotation = mat4();
 	scale = mat4();
+	transform = mat4();
 }
 
 Object::~Object()
+{
+}
+
+Object::Object(const Object& other)
+{
+	translation = other.translation;
+	rotation = other.rotation;
+	scale = other.scale;
+	transform = other.transform;
+}
+
+void Object::operator=(const Object& other)
+{
+	if (this == &other)
+		return;
+
+	translation = other.translation;
+	rotation = other.rotation;
+	scale = other.scale;
+	transform = other.transform;
+}
+
+Object::Object(Object&& other) noexcept
+{
+	translation = std::move(other.translation);
+	rotation = std::move(other.rotation);
+	scale = std::move(other.scale);
+	transform = std::move(other.transform);
+}
+
+void Object::operator=(Object&& other) noexcept
+{
+	if (this == &other)
+		return;
+
+	translation = std::move(other.translation);
+	rotation = std::move(other.rotation);
+	scale = std::move(other.scale);
+	transform = std::move(other.transform);
+}
+
+void Object::rotateX(float angle)
+{
+	mat4 addition;
+	float radians = angle * 3.14f / 180.0f;
+	addition.mat[1][1] = cosf(radians);
+	addition.mat[1][2] = sinf(radians);
+	addition.mat[2][1] = -sinf(radians);
+	addition.mat[2][2] = cosf(radians);
+
+	rotation *= addition;
+
+	transform = scale * translation * rotation;
+}
+
+void Object::rotateY(float angle)
+{
+	mat4 addition;
+	float radians = angle * 3.14f / 180.0f;
+	addition.mat[0][0] = cosf(radians);
+	addition.mat[0][2] = sinf(radians);
+	addition.mat[2][0] = -sinf(radians);
+	addition.mat[2][2] = cosf(radians);
+
+	rotation *= addition;
+
+	transform = scale * translation * rotation;
+}
+
+void Object::rotateZ(float angle)
+{
+	mat4 addition;
+	float radians = angle * 3.14f / 180.0f;
+	addition.mat[0][0] = cosf(radians);
+	addition.mat[0][1] = sinf(radians);
+	addition.mat[1][0] = -sinf(radians);
+	addition.mat[1][1] = cosf(radians);
+
+	rotation *= addition;
+
+	transform = scale * translation * rotation;
+}
+
+void Object::translate(vec3 translating)
+{
+	mat4 addition;
+	addition.mat[0][3] = translating.x;
+	addition.mat[1][3] = translating.y;
+	addition.mat[2][3] = translating.z;
+
+	translation *= addition;
+
+	transform = scale * translation * rotation;
+}
+
+void Object::scaling(float coeff)
+{
+	mat4 addition;
+	addition.mat[0][0] = coeff;
+	addition.mat[1][1] = coeff;
+	addition.mat[2][2] = coeff;
+
+	scale *= addition;
+
+	transform = scale * translation * rotation;
+}
+
+mat4 Object::getTransform() const
+{
+	return transform;
+}
+
+void Object::render(sf::RenderWindow& window, const Camera& camera)
 {
 }
 
@@ -23,20 +138,14 @@ ObjectMesh::~ObjectMesh()
 {
 }
 
-ObjectMesh::ObjectMesh(std::vector<vec3> pts, std::vector<std::vector<int>> inds)
+ObjectMesh::ObjectMesh(std::vector<vec3> pts, std::vector<std::vector<int>> inds) : Object()
 {
-	translation = mat4();
-	rotation = mat4();
-	scale = mat4();
 	points = pts;
 	indices = inds;
 }
 
-ObjectMesh::ObjectMesh(const ObjectMesh& other)
+ObjectMesh::ObjectMesh(const ObjectMesh& other) : Object(other)
 {
-	translation = other.translation;
-	rotation = other.rotation;
-	scale = other.scale;
 	points = other.points;
 	indices = other.indices;
 }
@@ -46,18 +155,14 @@ void ObjectMesh::operator=(const ObjectMesh& other)
 	if (this == &other)
 		return;
 
-	translation = other.translation;
-	rotation = other.rotation;
-	scale = other.scale;
+	(Object)* this = (Object)other;
+
 	points = other.points;
 	indices = other.indices;
 }
 
-ObjectMesh::ObjectMesh(ObjectMesh&& other) noexcept
+ObjectMesh::ObjectMesh(ObjectMesh&& other) noexcept : Object(std::move(other))
 {
-	translation = std::move(other.translation);
-	rotation = std::move(other.rotation);
-	scale = std::move(other.scale);
 	points = std::move(other.points);
 	indices = std::move(other.indices);
 }
@@ -67,67 +172,10 @@ void ObjectMesh::operator=(ObjectMesh&& other) noexcept
 	if (this == &other)
 		return;
 
-	translation = other.translation;
-	rotation = other.rotation;
-	scale = other.scale;
-	points = other.points;
-	indices = other.indices;
-}
+	(Object)*this = (Object)other;
 
-void ObjectMesh::rotateX(float angle)
-{
-	mat4 addition;
-	float radians = angle * 3.14f / 180.0f;
-	addition.mat[1][1] = cosf(radians);
-	addition.mat[1][2] = sinf(radians);
-	addition.mat[2][1] = -sinf(radians);
-	addition.mat[2][2] = cosf(radians);
-
-	rotation *= addition;
-}
-
-void ObjectMesh::rotateY(float angle)
-{
-	mat4 addition;
-	float radians = angle * 3.14f / 180.0f;
-	addition.mat[0][0] = cosf(radians);
-	addition.mat[0][2] = sinf(radians);
-	addition.mat[2][0] = -sinf(radians);
-	addition.mat[2][2] = cosf(radians);
-
-	rotation *= addition;
-}
-
-void ObjectMesh::rotateZ(float angle)
-{
-	mat4 addition;
-	float radians = angle * 3.14f / 180.0f;
-	addition.mat[0][0] = cosf(radians);
-	addition.mat[0][1] = sinf(radians);
-	addition.mat[1][0] = -sinf(radians);
-	addition.mat[1][1] = cosf(radians);
-
-	rotation *= addition;
-}
-
-void ObjectMesh::translate(vec3 translation)
-{
-	mat4 addition;
-	addition.mat[0][3] = translation.x;
-	addition.mat[1][3] = translation.y;
-	addition.mat[2][3] = translation.z;
-
-	this->translation *= addition;
-}
-
-void ObjectMesh::scaling(float coeff)
-{
-	mat4 addition;
-	addition.mat[0][0] = coeff;
-	addition.mat[1][1] = coeff;
-	addition.mat[2][2] = coeff;
-
-	scale *= addition;
+	points = std::move(other.points);
+	indices = std::move(other.indices);
 }
 
 void ObjectMesh::render(sf::RenderWindow& window, const Camera& camera)
@@ -146,9 +194,10 @@ void ObjectMesh::render(sf::RenderWindow& window, const Camera& camera)
 		{
 			// point from local to world space
 			vec3 new_point = points[indices[i][j]];
-			new_point = scale * new_point;
-			new_point = translation * new_point;
-			new_point = rotation * new_point;
+			//new_point = scale * new_point;
+			//new_point = translation * new_point;
+			//new_point = rotation * new_point;
+			new_point = transform * new_point;
 
 			// point from world to view space
 			new_point = camera.getView() * new_point;
@@ -240,6 +289,115 @@ void ObjectMesh::render(sf::RenderWindow& window, const Camera& camera)
 	}
 }
 
+ObjectSurface::ObjectSurface() : Object()
+{
+	func = nullptr;
+}
+
+ObjectSurface::~ObjectSurface()
+{
+}
+
+ObjectSurface::ObjectSurface(std::function<float(float, float)> f, float x, float z) : Object()
+{
+	func = f;
+	x_bound = abs(x);
+	z_bound = abs(z);
+}
+
+ObjectSurface::ObjectSurface(const ObjectSurface& other) : Object(other)
+{
+	func = other.func;
+}
+
+void ObjectSurface::operator=(const ObjectSurface& other)
+{
+	if (this == &other)
+		return;
+
+	(Object)*this = (Object)other;
+
+	func = other.func;
+}
+
+ObjectSurface::ObjectSurface(ObjectSurface&& other) noexcept : Object(std::move(other))
+{
+	func = std::move(other.func);
+}
+
+void ObjectSurface::operator=(ObjectSurface&& other) noexcept
+{
+	if (this == &other)
+		return;
+
+	(Object)*this = (Object)other;
+
+	func = std::move(other.func);
+}
+
+void ObjectSurface::generatePoints(float step)
+{
+	points.clear();
+	points.reserve(int(x_bound / step * 2.0f * z_bound / step * 2.0f) + 10);
+
+	for (float x = -x_bound,  i =0; x <= x_bound; x += step, i++)
+	{
+		for (float z = -z_bound; z <= z_bound; z += step)
+		{
+			float y = func(x, z);
+			points.push_back(vec3(x, y, z));
+		}
+	}
+
+	clip_space_points.resize(points.size());
+}
+
+void ObjectSurface::render(sf::RenderWindow& window, const Camera& camera)
+{
+	mat4 proj = camera.getProjection();
+
+	// draw using points
+	for (int i = 0; i < points.size(); i++)
+	{
+			// point from local to world
+			clip_space_points[i] = points[i];
+			//clip_space_points[i] = scale * clip_space_points[i];
+			//clip_space_points[i] = translation * clip_space_points[i];
+			//clip_space_points[i] = rotation * clip_space_points[i];
+			clip_space_points[i] = transform * clip_space_points[i];
+
+			// point from world to view space
+			clip_space_points[i] = camera.getView() * clip_space_points[i];
+
+			float w = clip_space_points[i].x * proj.mat[3][0] + clip_space_points[i].y * proj.mat[3][1] + clip_space_points[i].z * proj.mat[3][2] + proj.mat[3][3];
+
+			// point from view to clip space
+			clip_space_points[i] = camera.getProjection() * clip_space_points[i];
+
+			// point from clip to screen space
+			clip_space_points[i].x = (clip_space_points[i].x / w + 1) * 400;
+			clip_space_points[i].y = (-clip_space_points[i].y / w + 1) * 400;
+			clip_space_points[i].z = clip_space_points[i].z / w;
+	}
+
+	// points depth sort
+	//std::sort(clip_space_points.begin(), clip_space_points.end(), [](vec3 a, vec3 b) { return a.z < b.z; });
+
+	vec3 camera_view_direction = camera.getViewDirection();
+
+	for (int i = 1; i < clip_space_points.size(); i++)
+	{
+		sf::CircleShape point(5.0f);
+		point.setPosition(sf::Vector2f(clip_space_points[i].x, clip_space_points[i].y));
+		
+		sf::Color fill_color = { sf::Color( points[i].y * 10, 100, 100, 255)};
+
+		point.setFillColor(fill_color);
+
+		window.draw(point);
+	}
+}
+
 Camera::Camera() : Object()
 {
 	view = mat4();
@@ -253,11 +411,8 @@ Camera::~Camera()
 {
 }
 
-Camera::Camera(const Camera& other)
+Camera::Camera(const Camera& other) : Object(other)
 {
-	translation = other.translation;
-	rotation = other.rotation;
-	scale = other.scale;
 	view = other.view;
 	projection = other.projection;
 	render_mode = other.render_mode;
@@ -268,19 +423,15 @@ void Camera::operator=(const Camera& other)
 	if (this == &other)
 		return;
 
-	translation = other.translation;
-	rotation = other.rotation;
-	scale = other.scale;
+	(Object)*this = (Object)other;
+
 	view = other.view;
 	projection = other.projection;
 	render_mode = other.render_mode;
 }
 
-Camera::Camera(Camera&& other) noexcept
+Camera::Camera(Camera&& other) noexcept : Object(std::move(other))
 {
-	translation = std::move(other.translation);
-	rotation = std::move(other.rotation);
-	scale = std::move(other.scale);
 	view = std::move(other.view);
 	projection = std::move(other.projection);
 	render_mode = other.render_mode;
@@ -291,9 +442,8 @@ void Camera::operator=(Camera&& other) noexcept
 	if (this == &other)
 		return;
 
-	translation = std::move(other.translation);
-	rotation = std::move(other.rotation);
-	scale = std::move(other.scale);
+	(Object)*this = (Object)other;
+
 	view = std::move(other.view);
 	projection = std::move(other.projection);
 	render_mode = other.render_mode;
@@ -301,42 +451,21 @@ void Camera::operator=(Camera&& other) noexcept
 
 void Camera::rotateX(float angle)
 {
-	mat4 addition;
-	float radians = angle * 3.14f / 180.0f;
-	addition.mat[1][1] = cosf(radians);
-	addition.mat[1][2] = sinf(radians);
-	addition.mat[2][1] = -sinf(radians);
-	addition.mat[2][2] = cosf(radians);
-
-	rotation *= addition;
+	Object::rotateX(angle);
 
 	view = mat4::getInverse(scale * translation * rotation);
 }
 
 void Camera::rotateY(float angle)
 {
-	mat4 addition;
-	float radians = angle * 3.14f / 180.0f;
-	addition.mat[0][0] = cosf(radians);
-	addition.mat[0][2] = sinf(radians);
-	addition.mat[2][0] = -sinf(radians);
-	addition.mat[2][2] = cosf(radians);
-
-	rotation *= addition;
+	Object::rotateY(angle);
 
 	view = mat4::getInverse(scale * translation * rotation);
 }
 
 void Camera::rotateZ(float angle)
 {
-	mat4 addition;
-	float radians = angle * 3.14f / 180.0f;
-	addition.mat[0][0] = cosf(radians);
-	addition.mat[0][1] = sinf(radians);
-	addition.mat[1][0] = -sinf(radians);
-	addition.mat[1][1] = cosf(radians);
-
-	rotation *= addition;
+	Object::rotateZ(angle);
 
 	view = mat4::getInverse(scale * translation * rotation);
 }
@@ -371,26 +500,32 @@ void Camera::setRotation(vec3 angles)
 
 void Camera::translate(vec3 translating)
 {
-	mat4 addition;
-	addition.mat[0][3] = translating.x;
-	addition.mat[1][3] = translating.y;
-	addition.mat[2][3] = translating.z;
-
-	translation *= addition;
+	Object::translate(translating);
 
 	view = mat4::getInverse(scale * translation * rotation);
 }
 
 void Camera::scaling(float coeff)
 {
-	mat4 addition;
-	addition.mat[0][0] = coeff;
-	addition.mat[1][1] = coeff;
-	addition.mat[2][2] = coeff;
-
-	scale *= addition;
+	Object::scaling(coeff);
 
 	view = mat4::getInverse(scale * translation * rotation);
+}
+
+vec3 Camera::getViewDirection() const
+{
+	vec3 dir = { transform.mat[0][2], transform.mat[1][2], transform.mat[2][2] };
+	dir.normalize();
+
+	return dir;
+}
+
+vec3 Camera::getRightDirection() const
+{
+	vec3 dir = { transform.mat[0][0], transform.mat[1][0], transform.mat[2][0] };
+	dir.normalize();
+
+	return dir;
 }
 
 Camera::RenderMode Camera::getRenderMode() const
