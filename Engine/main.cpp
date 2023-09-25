@@ -22,7 +22,7 @@ int main()
 
 	ObjectSurface surface(std::function<float(float, float)>([](float x, float z) { return x * x + z * z; }), 2.0f, 2.0f);
 
-	surface.generatePoints(0.10f);
+	surface.generateMesh(0.20f);
 
 	surface.rotateX(180.0f);
 
@@ -61,6 +61,12 @@ int main()
 
 		if (my_input.isKeyPressed(sf::Keyboard::E))
 			my_camera.translate(vec3(0.0f, -speed, 0.0f));
+
+		if (my_input.isKeyPressed(sf::Keyboard::P))
+			surface.rotateY(1.0f);
+
+		if (my_input.isKeyPressed(sf::Keyboard::O))
+			surface.rotateY(-1.0f);
 
 		if (my_input.isKeyPressed(sf::Keyboard::LShift))
 		{

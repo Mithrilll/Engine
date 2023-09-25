@@ -66,7 +66,7 @@ public:
 	ObjectSurface(ObjectSurface&& other) noexcept;
 	void operator=(ObjectSurface&& other) noexcept;
 
-	void generatePoints(float step);
+	void generateMesh(float step);
 
 	void render(sf::RenderWindow& window, const Camera& camera) override;
 
@@ -77,7 +77,8 @@ private:
 	float z_bound = 0.0f;
 
 	std::vector<vec3> points;
-	std::vector<vec3> clip_space_points;
+	std::vector<std::pair<std::vector<vec3>, sf::Color>> lines;
+	std::vector<std::vector<int>> indices;
 };
 
 class Camera : public Object

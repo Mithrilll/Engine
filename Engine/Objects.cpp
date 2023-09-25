@@ -335,66 +335,121 @@ void ObjectSurface::operator=(ObjectSurface&& other) noexcept
 	func = std::move(other.func);
 }
 
-void ObjectSurface::generatePoints(float step)
+void ObjectSurface::generateMesh(float step)
 {
 	points.clear();
 	points.reserve(int(x_bound / step * 2.0f * z_bound / step * 2.0f) + 10);
 
-	for (float x = -x_bound,  i =0; x <= x_bound; x += step, i++)
+	lines.resize(2 * x_bound / step);
+	for (float x = -x_bound, i = 0; x <= x_bound; x += step, i++)
 	{
-		for (float z = -z_bound; z <= z_bound; z += step)
+		lines[i].first.resize(2 * z_bound / step);
+		lines[i].second = sf::Color(i * 10, 255, 255, 255);
+		for (float z = -z_bound, j = 0; z <= z_bound; z += step, j++)
 		{
 			float y = func(x, z);
 			points.push_back(vec3(x, y, z));
+			lines[i].first[j] = points[points.size() - 1];
 		}
 	}
-
-	clip_space_points.resize(points.size());
 }
 
 void ObjectSurface::render(sf::RenderWindow& window, const Camera& camera)
 {
-	mat4 proj = camera.getProjection();
+	std::vector<std::vector<vec3>> polygons;
 
-	// draw using points
-	for (int i = 0; i < points.size(); i++)
+	for (int i = 1; i < lines.size(); i++)
 	{
-			// point from local to world
-			clip_space_points[i] = points[i];
-			//clip_space_points[i] = scale * clip_space_points[i];
-			//clip_space_points[i] = translation * clip_space_points[i];
-			//clip_space_points[i] = rotation * clip_space_points[i];
-			clip_space_points[i] = transform * clip_space_points[i];
+		for (int j = 1; j < lines[i].first.size(); j++)
+		{
+			// point from local to world space
+			vec3 new_point_1_1= lines[i].first[j];
+			vec3 new_point_1_2= lines[i].first[j - 1];
+			vec3 new_point_2_1 = lines[i - 1].first[j];
+			vec3 new_point_2_2 = lines[i - 1].first[j - 1];
+			//new_point = scale * new_point;
+			//new_point = translation * new_point;
+			//new_point = rotation * new_point;
+			new_point_1_1 = transform * new_point_1_1;
+			new_point_1_2 = transform * new_point_1_2;
+
+			new_point_2_1 = transform * new_point_2_1;
+			new_point_2_2 = transform * new_point_2_2;
 
 			// point from world to view space
-			clip_space_points[i] = camera.getView() * clip_space_points[i];
+			new_point_1_1 = camera.getView() * new_point_1_1;
+			new_point_1_2 = camera.getView() * new_point_1_2;
 
-			float w = clip_space_points[i].x * proj.mat[3][0] + clip_space_points[i].y * proj.mat[3][1] + clip_space_points[i].z * proj.mat[3][2] + proj.mat[3][3];
+			new_point_2_1 = camera.getView() * new_point_2_1;
+			new_point_2_2 = camera.getView() * new_point_2_2;
+
+			mat4 proj = camera.getProjection();
+
+			float w_1_1 = new_point_1_1.x * proj.mat[3][0] + new_point_1_1.y * proj.mat[3][1] + new_point_1_1.z * proj.mat[3][2] + proj.mat[3][3];
+			float w_1_2 = new_point_1_2.x * proj.mat[3][0] + new_point_1_2.y * proj.mat[3][1] + new_point_1_2.z * proj.mat[3][2] + proj.mat[3][3];
+
+			float w_2_1 = new_point_2_1.x * proj.mat[3][0] + new_point_2_1.y * proj.mat[3][1] + new_point_2_1.z * proj.mat[3][2] + proj.mat[3][3];
+			float w_2_2 = new_point_2_2.x * proj.mat[3][0] + new_point_2_2.y * proj.mat[3][1] + new_point_2_2.z * proj.mat[3][2] + proj.mat[3][3];
 
 			// point from view to clip space
-			clip_space_points[i] = camera.getProjection() * clip_space_points[i];
+			new_point_1_1 = camera.getProjection() * new_point_1_1;
+			new_point_1_2 = camera.getProjection() * new_point_1_2;
+
+			new_point_2_1 = camera.getProjection() * new_point_2_1;
+			new_point_2_2 = camera.getProjection() * new_point_2_2;
 
 			// point from clip to screen space
-			clip_space_points[i].x = (clip_space_points[i].x / w + 1) * 400;
-			clip_space_points[i].y = (-clip_space_points[i].y / w + 1) * 400;
-			clip_space_points[i].z = clip_space_points[i].z / w;
+			new_point_1_1.x = (new_point_1_1.x / w_1_1 + 1) * 400;
+			new_point_1_1.y = (-new_point_1_1.y / w_1_1 + 1) * 400;
+
+			new_point_1_2.x = (new_point_1_2.x / w_1_2 + 1) * 400;
+			new_point_1_2.y = (-new_point_1_2.y / w_1_2 + 1) * 400;
+
+
+			new_point_2_1.x = (new_point_2_1.x / w_2_1 + 1) * 400;
+			new_point_2_1.y = (-new_point_2_1.y / w_2_1 + 1) * 400;
+
+			new_point_2_2.x = (new_point_2_2.x / w_2_2 + 1) * 400;
+			new_point_2_2.y = (-new_point_2_2.y / w_2_2 + 1) * 400;
+
+			if((new_point_1_1.z + new_point_1_2.z + new_point_2_1.z + new_point_2_2.z) / 4 < 1)
+				polygons.push_back({new_point_1_1, new_point_1_2, new_point_2_1, new_point_2_2});
+		}
 	}
 
-	// points depth sort
-	//std::sort(clip_space_points.begin(), clip_space_points.end(), [](vec3 a, vec3 b) { return a.z < b.z; });
+	std::sort(polygons.begin(), polygons.end(), [](std::vector<vec3> a, std::vector<vec3> b) {
+		float d1 = a[0].z + a[1].z + a[2].z + a[3].z;
+		d1 = d1 / 4;
+		float d2 = b[0].z + b[1].z + b[2].z + b[3].z;
+		d2 = d2 / 4;
 
-	vec3 camera_view_direction = camera.getViewDirection();
+		return d1 < d2;
+		});
 
-	for (int i = 1; i < clip_space_points.size(); i++)
+	for (int i = 0; i < polygons.size(); i++)
 	{
-		sf::CircleShape point(5.0f);
-		point.setPosition(sf::Vector2f(clip_space_points[i].x, clip_space_points[i].y));
-		
-		sf::Color fill_color = { sf::Color( points[i].y * 10, 100, 100, 255)};
+		sf::ConvexShape polygon{ 4 };
+		polygon.setPoint(0, sf::Vector2f(polygons[i][0].x, polygons[i][0].y));
+		polygon.setPoint(1, sf::Vector2f(polygons[i][1].x, polygons[i][1].y));
+		polygon.setPoint(2, sf::Vector2f(polygons[i][3].x, polygons[i][3].y));
+		polygon.setPoint(3, sf::Vector2f(polygons[i][2].x, polygons[i][2].y));
 
-		point.setFillColor(fill_color);
+		sf::Vertex line1[] =
+		{
+			sf::Vertex(sf::Vector2f(polygons[i][0].x, polygons[i][0].y), sf::Color::Red),
+			sf::Vertex(sf::Vector2f(polygons[i][1].x, polygons[i][1].y), sf::Color::Red)
+		};
 
-		window.draw(point);
+		sf::Vertex line2[] =
+		{
+			sf::Vertex(sf::Vector2f(polygons[i][2].x, polygons[i][2].y), sf::Color::Red),
+			sf::Vertex(sf::Vector2f(polygons[i][3].x, polygons[i][3].y), sf::Color::Red)
+		};
+
+		window.draw(polygon);
+
+		window.draw(line1, 2, sf::Lines);
+		window.draw(line2, 2, sf::Lines);
 	}
 }
 
